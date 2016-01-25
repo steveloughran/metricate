@@ -17,51 +17,13 @@
 [
   {
     "type": "record",
-    "name": "NNAuditEvent",
+    "name": "FileStatusRecord",
     "namespace": "org.apache.hadoop.metricate.avro",
-    "doc": "An Audit Event from the namenode",
     "fields": [
       {
-        "name": "type",
-        "doc":  "name of this event, always 'nnaudit'",
-        "type": "string",
-        "default": "nnaudit"
-      },
-      {
-        "name": "timestamp",
-        "doc":  "System.currentTimeMillis() when event was recorded",
-        "type": "long"
-      },
-      {
-        "name": "date",
-        "doc": "Human readable version of 'timestamp'",
-        "type": "string"
-      },
-      {
-        "name": "command",
-        "doc":  "audited command",
-        "type": "string"
-      },
-      {
-        "name": "succeeded",
-        "doc":  "was the operation permitted",
-        "type": "boolean"
-      },
-      {
-        "name": "username",
-        "doc": "username",
-        "type": "string"
-      },
-      {
-        "name": "address",
-        "doc": "IP address of requestor",
-        "type": "int",
-        "default": "0"
-      },
-      {
         "name": "path",
-        "doc": "path of operation",
-        "type": ["null", "string"],
+        "doc": "source path",
+        "type": "string",
         "default": null
       },
       {
@@ -87,25 +49,91 @@
       {
         "name": "owner",
         "doc": "owner",
-        "type": [ "null", "string"],
+        "type": "string",
         "default": null
       },
       {
         "name": "group",
-        "doc": "file group",
-        "type": [ "null", "string"],
+        "type": "string",
         "default": null
       },
       {
+        "name": "permissions",
+        "doc": "permissions",
+        "type": "int",
+        "default": "0"
+      }
+    ]
+  },
+
+  {
+    "type": "record",
+    "name": "NamenodeAuditEventRecord",
+    "namespace": "org.apache.hadoop.metricate.avro",
+    "doc": "An Audit Event from the namenode",
+    "fields": [
+      {
+        "name": "type",
+        "doc": "name of this event, always 'nnaudit'",
+        "type": "string",
+        "default": "nnaudit"
+      },
+      {
+        "name": "timestamp",
+        "doc": "System.currentTimeMillis() when event was recorded",
+        "type": "long"
+      },
+      {
+        "name": "date",
+        "doc": "Human readable version of 'timestamp'",
+        "type": "string"
+      },
+      {
+        "name": "command",
+        "doc": "audited command",
+        "type": "string"
+      },
+      {
+        "name": "succeeded",
+        "doc": "was the operation permitted",
+        "type": "boolean"
+      },
+      {
+        "name": "username",
+        "doc": "username",
+        "type": "string"
+      },
+      {
+        "name": "address",
+        "doc": "IP address of requestor",
+        "type": "int",
+        "default": "0"
+      },
+      {
         "name": "source",
-        "doc": "source file",
-        "type": ["null", "string"],
+        "doc": "source path",
+        "type": [
+          "null",
+          "string"
+        ],
+        "default": null
+      },
+      {
+        "name": "sourceFileStatus",
+        "doc": "source path",
+        "type": [
+          "null",
+          "FileStatusRecord"
+        ],
         "default": null
       },
       {
         "name": "dest",
-        "doc": "dest file",
-        "type": ["null", "string"],
+        "doc": "destination path",
+        "type": [
+          "null",
+          "string"
+        ],
         "default": null
       },
       {
