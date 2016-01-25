@@ -1,0 +1,122 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[
+  {
+    "type": "record",
+    "name": "NNAuditEvent",
+    "namespace": "org.apache.hadoop.metricate.avro",
+    "doc": "An Audit Event from the namenode",
+    "fields": [
+      {
+        "name": "type",
+        "doc":  "name of this event, always 'nnaudit'",
+        "type": "string",
+        "default": "nnaudit"
+      },
+      {
+        "name": "timestamp",
+        "doc":  "System.currentTimeMillis() when event was recorded",
+        "type": "long"
+      },
+      {
+        "name": "date",
+        "doc": "Human readable version of 'timestamp'",
+        "type": "string"
+      },
+      {
+        "name": "command",
+        "doc":  "audited command",
+        "type": "string"
+      },
+      {
+        "name": "succeeded",
+        "doc":  "was the operation permitted",
+        "type": "boolean"
+      },
+      {
+        "name": "username",
+        "doc": "username",
+        "type": "string"
+      },
+      {
+        "name": "address",
+        "doc": "IP address of requestor",
+        "type": "int",
+        "default": "0"
+      },
+      {
+        "name": "path",
+        "doc": "path of operation",
+        "type": ["null", "string"],
+        "default": "null"
+      },
+      {
+        "name": "isdir",
+        "doc": "is this a directory",
+        "type": "boolean"
+      },
+      {
+        "name": "length",
+        "doc": "file length in bytes",
+        "type": "long"
+      },
+      {
+        "name": "modified",
+        "doc": "path modified timestamp",
+        "type": "long"
+      },
+      {
+        "name": "accessed",
+        "doc": "path accessed timestamp",
+        "type": "long"
+      },
+      {
+        "name": "owner",
+        "doc": "owner",
+        "type": [ "null", "string"],
+        "default": "null"
+      },
+      {
+        "name": "group",
+        "doc": "file group",
+        "type": [ "null", "string"],
+        "default": "null"
+      },
+      {
+        "name": "source",
+        "doc": "source file",
+        "type": ["null", "string"],
+        "default": "null"
+      },
+      {
+        "name": "dest",
+        "doc": "dest file",
+        "type": ["null", "string"],
+        "default": "null"
+      },
+      {
+        "name": "text",
+        "doc": "Any text to accompany event",
+        "type": [
+          "null",
+          "string"
+        ],
+        "default": "null"
+      }
+    ]
+  }
+]
