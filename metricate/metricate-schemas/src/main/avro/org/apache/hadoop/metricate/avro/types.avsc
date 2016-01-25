@@ -62,7 +62,7 @@
         "name": "path",
         "doc": "path of operation",
         "type": ["null", "string"],
-        "default": "null"
+        "default": null
       },
       {
         "name": "isdir",
@@ -88,25 +88,25 @@
         "name": "owner",
         "doc": "owner",
         "type": [ "null", "string"],
-        "default": "null"
+        "default": null
       },
       {
         "name": "group",
         "doc": "file group",
         "type": [ "null", "string"],
-        "default": "null"
+        "default": null
       },
       {
         "name": "source",
         "doc": "source file",
         "type": ["null", "string"],
-        "default": "null"
+        "default": null
       },
       {
         "name": "dest",
         "doc": "dest file",
         "type": ["null", "string"],
-        "default": "null"
+        "default": null
       },
       {
         "name": "text",
@@ -115,7 +115,7 @@
           "null",
           "string"
         ],
-        "default": "null"
+        "default": null
       }
     ]
   }

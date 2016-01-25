@@ -22,8 +22,9 @@
 	<groupId>org.apache.hadoop.metricate</groupId>
 	<artifactId>metricate</artifactId>
 	<version>0.1-SNAPSHOT</version>
-	<packaging>jar</packaging>
-	<licenses>
+  <packaging>pom</packaging>
+
+  <licenses>
 		<license>
 			<name>Apache 2.0 License</name>
 			<url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
@@ -31,7 +32,12 @@
 		</license>
 	</licenses>
 
-	<properties>
+  <modules>
+    <module>metricate-schemas</module>
+<!--    <module>metricate-hadoop</module>-->
+  </modules>
+
+  <properties>
     <!--language versions -->
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
