@@ -73,12 +73,6 @@
     "doc": "An Audit Event from the namenode",
     "fields": [
       {
-        "name": "type",
-        "doc": "name of this event, always 'nnaudit'",
-        "type": "string",
-        "default": "nnaudit"
-      },
-      {
         "name": "timestamp",
         "doc": "System.currentTimeMillis() when event was recorded",
         "type": "long"
