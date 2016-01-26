@@ -58,7 +58,7 @@
     <avro.version>1.7.4</avro.version>
     <avro.mapred.classifier>hadoop2</avro.mapred.classifier>
     <codahale.metrics.version>3.1.2</codahale.metrics.version>
-    <flume.version>1.6.0</flume.version>
+    <flume.version>1.5.2</flume.version>
     <junit.version>4.11</junit.version>
     <log4j.version>1.2.17</log4j.version>
     <scalatest.version>2.2.6</scalatest.version>
@@ -198,9 +198,26 @@
           </exclusion>
         </exclusions>
       </dependency>
+
       <dependency>
         <groupId>org.apache.flume</groupId>
         <artifactId>flume-ng-sdk</artifactId>
+        <version>${flume.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.thrift</groupId>
+            <artifactId>libthrift</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.flume</groupId>
+        <artifactId>flume-ng-embedded-agent</artifactId>
         <version>${flume.version}</version>
         <exclusions>
           <exclusion>
