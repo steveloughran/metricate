@@ -19,13 +19,11 @@
 package org.apache.hadoop.metricate;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.contract.ContractTestUtils;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.server.namenode.AuditLogger;
-import org.apache.hadoop.metricate.avro.FileStatusRecord;
 import org.apache.hadoop.metricate.hdfs.MetricateAuditLogger;
 import org.apache.hadoop.metricate.testtools.MetricateTestBase;
 import org.junit.AfterClass;
@@ -39,7 +37,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.*;
 

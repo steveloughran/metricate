@@ -18,13 +18,11 @@
 
 package org.apache.hadoop.metricate;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.metricate.avro.FileStatusRecord;
 import org.apache.hadoop.metricate.hdfs.MetricateAuditLogger;
 import org.apache.hadoop.metricate.testtools.MetricateTestBase;
-import org.apache.hadoop.metricate.testtools.MiniFlumeService;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
