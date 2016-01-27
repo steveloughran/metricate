@@ -18,10 +18,13 @@
 
 package org.apache.hadoop.metricate.testtools;
 
+import com.google.common.base.Preconditions;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.service.Service;
 import org.apache.hadoop.util.StopWatch;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.Timeout;
@@ -32,6 +35,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 /**
  * Base test case has a list of services which are stopped on teardown
@@ -44,6 +48,8 @@ public abstract class MetricateTestBase extends Assert {
 
   protected static List<Service> services = new LinkedList<>();
 
+  protected static MiniFlumeService flume;
+
   protected static void addStartedService(Service s) {
     services.add(s);
   }
@@ -51,19 +57,43 @@ public abstract class MetricateTestBase extends Assert {
   @AfterClass
   public static void stopServices() {
     services.stream().forEach(Service::stop);
+    flume = null;
   }
 
-  protected static void await(long time, BooleanSupplier probe, String text) {
+  public static MiniFlumeService getFlume() {
+    return flume;
+  }
+
+  /**
+   * Start the flume service
+   */
+  public static void startFlumeService() {
+    Preconditions.checkState(flume == null, "Flume already started");
+    flume = new MiniFlumeService("f1");
+    flume.init(new Configuration());
+    flume.start();
+    addStartedService(flume);
+  }
+
+  protected static void await(long time, BooleanSupplier probe, String text)
+      throws InterruptedException {
+    await(time, probe, () -> text);
+  }
+
+  protected static void await(long time, BooleanSupplier probe, Supplier<String> text)
+      throws InterruptedException {
 
     StopWatch watch = new StopWatch().start();
     while (watch.now(TimeUnit.MILLISECONDS) < time) {
       if (probe.getAsBoolean()) {
         return;
       }
+      Thread.sleep(500);
     }
     // here? timeout
-    fail(text);
+    fail(text.get());
   }
+
 
 
 }

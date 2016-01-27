@@ -22,6 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.metricate.avro.FileStatusRecord;
+import org.apache.hadoop.metricate.hdfs.MetricateAuditLogger;
 import org.apache.hadoop.metricate.testtools.MetricateTestBase;
 import org.apache.hadoop.metricate.testtools.MiniFlumeService;
 import org.junit.BeforeClass;
@@ -29,20 +30,17 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+
 import static org.hamcrest.Matchers.*;
 
 public class TestMiniFlumeService extends MetricateTestBase {
   private static final Logger LOG = LoggerFactory.getLogger(
       TestMiniFlumeService.class);
 
-  private static MiniFlumeService flume;
-
   @BeforeClass
   public static void createFlumeService() {
-    flume = new MiniFlumeService("f1");
-    flume.init(new Configuration());
-    flume.start();
-    addStartedService(flume);
+    startFlumeService();
   }
 
   @Test
@@ -70,6 +68,21 @@ public class TestMiniFlumeService extends MetricateTestBase {
     publish.stop();
     assertThat("publishedCount", publish.getEventsPublishedCount(), equalTo(1L));
     assertThat("failedPublishedCount", publish.getPublishFailureCount(), equalTo(0L));
+  }
+
+  @Test
+  public void testHdfsAuditor() throws Throwable {
+    MetricateAuditLogger auditLogger = new MetricateAuditLogger();
+    auditLogger.initialize(flume.getConfig());
+    InetAddress localhost = InetAddress.getLocalHost();
+    auditLogger.logAuditEvent(true, "alice", localhost, "rm", "/", null, null,
+        null, null);
+    auditLogger.logAuditEvent(false, "bob", localhost, "mkdir", "/", null, null,
+        null, null);
+    await(30000, () -> auditLogger.getEventsPublishedCount() == 2, "not published");
+    auditLogger.close();
+    assertThat("failedPublishedCount", auditLogger.getPublishFailureCount(),
+        equalTo(0L));
 
   }
 }

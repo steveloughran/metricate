@@ -60,32 +60,19 @@ public class MiniFlumeService extends AbstractService {
     return agent;
   }
 
-  /*
-  a1.channels = c1
-a1.sources = r1
-a1.sinks = k1
-
-a1.channels.c1.type = memory
-
-a1.sources.r1.channels = c1
-a1.sources.r1.type = avro
-# For using a thrift source set the following instead of the above line.
-# a1.source.r1.type = thrift
-a1.sources.r1.bind = 0.0.0.0
-a1.sources.r1.port = 41414
-
-a1.sinks.k1.channel = c1
-a1.sinks.k1.type = logger
+  /**
+   * Init the service, including finding a free port. The config is updated
+   * with the options used by the metric flume publisher.
+   * @param conf
+   * @throws Exception
    */
-
-
   @Override
   protected void serviceInit(Configuration conf) throws Exception {
     super.serviceInit(conf);
     String name = getName();
     port = conf.getInt(FLUME_PORT, 0);
     if (port == 0) {
-      port = MetricateUtils.getPort(41414,5);
+      port = MetricateUtils.getPort(41414 ,5);
     }
     set("sources", "r1");
     set("channels", "c1");

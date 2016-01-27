@@ -121,7 +121,6 @@ public class PublishToFlume<RecordType extends SpecificRecord>
    * record inside it.
    * @param record record to serialize
    * @return an event to deliver
-   * @throws IOException
    */
   private Event buildEvent(RecordType record) {
     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {

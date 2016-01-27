@@ -23,6 +23,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenSecretManager;
 import org.apache.hadoop.hdfs.server.namenode.HdfsAuditLogger;
+import org.apache.hadoop.metricate.MetricateConstants;
 import org.apache.hadoop.metricate.MetricateUtils;
 import org.apache.hadoop.metricate.PublishToFlume;
 import org.apache.hadoop.metricate.PublishToLog;
@@ -36,8 +37,11 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+
+import static org.apache.hadoop.hdfs.DFSConfigKeys.DFS_NAMENODE_AUDIT_LOGGERS_KEY;
 
 /**
  * Log from HDFS to flume and/or local FS for testing/replay.
@@ -50,11 +54,13 @@ public class MetricateAuditLogger extends HdfsAuditLogger
   public static final Schema SCHEMA = NamenodeAuditEventRecord.getClassSchema();
 
   List<Publisher<NamenodeAuditEventRecord>> publishers = new ArrayList<>(2);
+  private PublishToFlume<NamenodeAuditEventRecord> flumePublisher;
 
   @Override
   public void initialize(Configuration conf) {
     publishers.add(new PublishToLog<>(SCHEMA));
-    publishers.add(new PublishToFlume<>(SCHEMA));
+    flumePublisher = new PublishToFlume<>(SCHEMA);
+    publishers.add(flumePublisher);
     publishers.stream().forEach(p -> {
       p.init(conf);
       p.start();
@@ -64,7 +70,6 @@ public class MetricateAuditLogger extends HdfsAuditLogger
   @Override
   public void close() throws Exception {
     publishers.stream().forEach(AbstractService::stop);
-
   }
 
   @Override
@@ -98,5 +103,28 @@ public class MetricateAuditLogger extends HdfsAuditLogger
 
   protected String nonNull(String dst) {
     return dst != null ? dst: "";
+  }
+
+  public long getEventsPublishedCount() {
+    return flumePublisher.getEventsPublishedCount();
+  }
+
+  public long getPublishFailureCount() {
+    return flumePublisher.getPublishFailureCount();
+  }
+
+  public static void registerAuditLogger(Configuration conf) {
+    conf.set(DFS_NAMENODE_AUDIT_LOGGERS_KEY,
+        MetricateConstants.METRICATE_AUDIT_LOGGER);
+  }
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder(
+        "MetricateAuditLogger{");
+    sb.append("eventsPublishedCount=").append(getEventsPublishedCount());
+    sb.append(", publishFailureCount=").append(getPublishFailureCount());
+    sb.append('}');
+    return sb.toString();
   }
 }
