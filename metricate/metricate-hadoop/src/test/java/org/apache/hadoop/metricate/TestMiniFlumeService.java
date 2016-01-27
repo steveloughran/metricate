@@ -26,9 +26,14 @@ import org.apache.hadoop.metricate.testtools.MetricateTestBase;
 import org.apache.hadoop.metricate.testtools.MiniFlumeService;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static org.hamcrest.Matchers.*;
 
 public class TestMiniFlumeService extends MetricateTestBase {
+  private static final Logger LOG = LoggerFactory.getLogger(
+      TestMiniFlumeService.class);
 
   private static MiniFlumeService flume;
 
@@ -60,9 +65,11 @@ public class TestMiniFlumeService extends MetricateTestBase {
         0, true, 1, 1000, System.currentTimeMillis(),
         new Path("hdfs://localhost:8080/"));
     publish.put(MetricateUtils.createFileStatusRecord(status));
+    LOG.info("Awaiting published events");
+    await(30000, () -> publish.getEventsPublishedCount() > 0, "not published");
     publish.stop();
-    assertThat("publishedCount", publish.getEventsPublishedCount(), equalTo(1));
-    assertThat("failedPublishedCount", publish.getEventsPublishedCount(), equalTo(0));
+    assertThat("publishedCount", publish.getEventsPublishedCount(), equalTo(1L));
+    assertThat("failedPublishedCount", publish.getPublishFailureCount(), equalTo(0L));
 
   }
 }

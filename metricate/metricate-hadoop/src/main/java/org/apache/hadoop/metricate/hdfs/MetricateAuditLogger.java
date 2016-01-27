@@ -28,17 +28,16 @@ import org.apache.hadoop.metricate.PublishToFlume;
 import org.apache.hadoop.metricate.PublishToLog;
 import org.apache.hadoop.metricate.Publisher;
 import org.apache.hadoop.metricate.avro.FileStatusRecord;
+import org.apache.hadoop.metricate.avro.NamenodeAuditEventRecord;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.service.AbstractService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
-import org.apache.hadoop.metricate.avro.NamenodeAuditEventRecord;
-import org.apache.hadoop.service.AbstractService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Log from HDFS to flume and/or local FS for testing/replay.

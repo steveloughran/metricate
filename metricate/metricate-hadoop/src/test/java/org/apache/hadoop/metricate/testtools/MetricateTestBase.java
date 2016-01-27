@@ -18,8 +18,8 @@
 
 package org.apache.hadoop.metricate.testtools;
 
-import org.apache.hadoop.service.AbstractService;
 import org.apache.hadoop.service.Service;
+import org.apache.hadoop.util.StopWatch;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -28,11 +28,10 @@ import org.junit.rules.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.net.ServerSocket;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 
 /**
  * Base test case has a list of services which are stopped on teardown
@@ -54,6 +53,17 @@ public abstract class MetricateTestBase extends Assert {
     services.stream().forEach(Service::stop);
   }
 
+  protected static void await(long time, BooleanSupplier probe, String text) {
+
+    StopWatch watch = new StopWatch().start();
+    while (watch.now(TimeUnit.MILLISECONDS) < time) {
+      if (probe.getAsBoolean()) {
+        return;
+      }
+    }
+    // here? timeout
+    fail(text);
+  }
 
 
 }

@@ -71,27 +71,47 @@ public abstract class Publisher<RecordType extends SpecificRecord>
   protected void startPublishing() throws IOException {
     publish.execute(() -> {
       LOG.info("Started publisher thread");
-      while(!isInState(STATE.STOPPED)) {
-        try {
-          QueuedEvent event = queue.take();
-          if (event.isStopEvent()) {
-            LOG.info("stop event received");
-            break;
-          }
-          List<RecordType> records = event.records;
+      publisherThreadStartup();
+      Exception caught = null;
+      try {
+        while(!isInState(STATE.STOPPED)) {
           try {
-            LOG.debug("Publishing {} records", records.size());
-            publish(records);
-            eventsPublishedCount.addAndGet(records.size());
-          } catch (IOException e) {
-            handlePublishFailure(records, e);
+            QueuedEvent event = queue.take();
+            if (event.isStopEvent()) {
+              LOG.info("stop event received");
+              break;
+            }
+            List<RecordType> records = event.records;
+            try {
+              LOG.debug("Publishing {} records", records.size());
+              publish(records);
+              eventsPublishedCount.addAndGet(records.size());
+            } catch (IOException e) {
+              handlePublishFailure(records, e);
+            }
+          } catch (InterruptedException e) {
+            // interruptions are ignored, but trigger a review of stopped state
+            LOG.info("Interrupted", e);
           }
-        } catch (InterruptedException e) {
-          // interruptions are ignored, but trigger a review of stopped state
-          LOG.info("Interrupted", e);
         }
+      } catch (Exception e) {
+        caught = e;
+      } finally {
+        publisherThreadExit(caught);
       }
     });
+  }
+
+  protected void publisherThreadStartup() {
+
+  }
+
+  protected void publisherThreadExit(Exception e) {
+    if (e == null) {
+      LOG.info("Exiting publisher thread");
+    } else {
+      LOG.info("Exiting publisher thread after {}", e, e);
+    }
   }
 
   public void put(List<RecordType> records) {

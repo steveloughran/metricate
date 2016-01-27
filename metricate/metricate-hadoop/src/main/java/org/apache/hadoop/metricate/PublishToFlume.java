@@ -89,14 +89,20 @@ public class PublishToFlume<RecordType extends SpecificRecord>
     props.setProperty(CONFIG_CONNECT_TIMEOUT, "2000");
     props.setProperty(CONFIG_REQUEST_TIMEOUT, "2000");
     props.setProperty(CONFIG_CONNECTION_POOL_SIZE, "2");
-    client = RpcClientFactory.getInstance(props);
+//    client = RpcClientFactory.getInstance(props);
+    client = RpcClientFactory.getDefaultInstance(host, port, batchSize);
     Preconditions.checkState(client.isActive(), "Avro client not operational");
   }
 
   @Override
   protected void serviceStop() throws Exception {
-    closeClient();
     super.serviceStop();
+  }
+
+  @Override
+  protected void publisherThreadExit(Exception e) {
+    super.publisherThreadExit(e);
+//    closeClient();
   }
 
   /**
