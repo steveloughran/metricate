@@ -25,4 +25,7 @@ public class MetricateConstants {
   public static final String METRICATE_FLUME_PORT = "metricate.flume.hostname";
   public static final String METRICATE_FLUME_BATCHSIZE
       = "metricate.flume.batchsize";
+
+  public static final String METRICATE_AUDIT_LOGGER
+      = "org.apache.hadoop.metricate.hdfs.MetricateAuditLogger";
 }
