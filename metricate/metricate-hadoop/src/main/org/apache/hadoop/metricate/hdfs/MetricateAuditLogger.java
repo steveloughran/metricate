@@ -26,12 +26,13 @@ import org.apache.hadoop.hdfs.server.namenode.HdfsAuditLogger;
 import org.apache.hadoop.metricate.PublishToFlume;
 import org.apache.hadoop.metricate.PublishToLog;
 import org.apache.hadoop.metricate.Publisher;
+import org.apache.hadoop.metricate.avro.FileStatusRecord;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.hadoop.metricate.avro.NamenodeAuditEventRecord;
 import org.slf4j.Logger;
@@ -47,7 +48,7 @@ public class MetricateAuditLogger extends HdfsAuditLogger
   private static final Logger LOG = LoggerFactory.getLogger(MetricateAuditLogger.class);
   public static final Schema SCHEMA = NamenodeAuditEventRecord.getClassSchema();
 
-  List<Publisher> publishers = new ArrayList<>(2);
+  List<Publisher<NamenodeAuditEventRecord>> publishers = new ArrayList<>(2);
 
   @Override
   public void initialize(Configuration conf) {
@@ -61,7 +62,7 @@ public class MetricateAuditLogger extends HdfsAuditLogger
 
   @Override
   public void close() throws Exception {
-    for (Publisher publisher : publishers) {
+    for (Publisher<NamenodeAuditEventRecord> publisher : publishers) {
       publisher.stop();
     }
   }
@@ -76,5 +77,36 @@ public class MetricateAuditLogger extends HdfsAuditLogger
       FileStatus stat,
       UserGroupInformation ugi,
       DelegationTokenSecretManager dtSecretManager) {
+
+    LOG.debug("Audit event {}", cmd);
+    NamenodeAuditEventRecord event = new NamenodeAuditEventRecord();
+    event.setCommand(cmd);
+    event.setUsername(userName);
+//    event.setAddress(new StringBuffer(addr.getAddress()));
+    FileStatusRecord fileStatus = new FileStatusRecord();
+    fileStatus.setPath(src);
+
+    if (stat != null) {
+      fileStatus.setIsdir(stat.isDirectory());
+      fileStatus.setLength(stat.getLen());
+      fileStatus.setAccessed(stat.getAccessTime());
+      fileStatus.setModified(stat.getModificationTime());
+      fileStatus.setGroup(stat.getGroup());
+      fileStatus.setOwner(stat.getOwner());
+      fileStatus.setPermissions((int) stat.getPermission().toExtendedShort());
+      event.setSourceFileStatus(fileStatus);
+    }
+    long now = System.currentTimeMillis();
+    event.setTimestamp(now);
+    event.setDate(new Date(now).toString());
+    event.setDest(nonNull(dst));
+    event.setSucceeded(succeeded);
+    for (Publisher<NamenodeAuditEventRecord> publisher : publishers) {
+      publisher.put(event);
+    }
+  }
+
+  protected String nonNull(String dst) {
+    return dst != null ? dst: "";
   }
 }

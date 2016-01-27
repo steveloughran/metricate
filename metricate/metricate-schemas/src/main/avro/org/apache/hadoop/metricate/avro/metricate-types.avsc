@@ -22,7 +22,7 @@
     "fields": [
       {
         "name": "path",
-        "doc": "source path",
+        "doc": "status path",
         "type": "string",
         "default": null
       },
@@ -100,8 +100,11 @@
       {
         "name": "address",
         "doc": "IP address of requestor",
-        "type": "int",
-        "default": "0"
+        "type": [
+          "null",
+          "bytes"
+        ],
+        "default": null
       },
       {
         "name": "source",

@@ -93,6 +93,7 @@ public abstract class Publisher<RecordType extends SpecificRecord> extends Abstr
   public void put(List<RecordType> records) {
     queue.add(new QueuedEvent(records));
   }
+
   public void put(RecordType record) {
     ArrayList<RecordType> r = new ArrayList<>(1);
     r.add(record);
