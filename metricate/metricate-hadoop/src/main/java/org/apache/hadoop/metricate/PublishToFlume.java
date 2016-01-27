@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.metricate;
 
+import com.google.common.base.Preconditions;
 import org.apache.avro.Schema;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.DatumWriter;
@@ -27,6 +28,7 @@ import org.apache.avro.specific.SpecificRecord;
 import org.apache.flume.Event;
 import org.apache.flume.EventDeliveryException;
 import org.apache.flume.api.RpcClient;
+import static org.apache.flume.api.RpcClientConfigurationConstants.*;
 import org.apache.flume.api.RpcClientFactory;
 import org.apache.flume.event.EventBuilder;
 import org.apache.hadoop.conf.Configuration;
@@ -37,6 +39,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class PublishToFlume<RecordType extends SpecificRecord>
     extends Publisher<RecordType> {
@@ -66,13 +69,28 @@ public class PublishToFlume<RecordType extends SpecificRecord>
     }
     batchSize = config.getInt(MetricateConstants.METRICATE_FLUME_BATCHSIZE,
         0);
-    bind();
     super.serviceStart();
+  }
+
+  @Override
+  protected void startPublishing() throws IOException {
+    bind();
+    super.startPublishing();
   }
 
   private void bind() {
     closeClient();
-    client = RpcClientFactory.getDefaultInstance(host, port, batchSize);
+    LOG.info("Publishing events to flume agent at {}:{}", host, port);
+    Properties props = new Properties();
+    props.setProperty(CONFIG_HOSTS, "h1");
+    props.setProperty(CONFIG_HOSTS_PREFIX + "h1",
+        host + ":" + port);
+    props.setProperty(CONFIG_BATCH_SIZE, "" + batchSize);
+    props.setProperty(CONFIG_CONNECT_TIMEOUT, "2000");
+    props.setProperty(CONFIG_REQUEST_TIMEOUT, "2000");
+    props.setProperty(CONFIG_CONNECTION_POOL_SIZE, "2");
+    client = RpcClientFactory.getInstance(props);
+    Preconditions.checkState(client.isActive(), "Avro client not operational");
   }
 
   @Override
@@ -86,6 +104,7 @@ public class PublishToFlume<RecordType extends SpecificRecord>
    */
   private void closeClient() {
     if (client != null) {
+      LOG.info("Closing flume client");
       client.close();
       client = null;
     }
@@ -98,25 +117,26 @@ public class PublishToFlume<RecordType extends SpecificRecord>
    * @return an event to deliver
    * @throws IOException
    */
-  private Event buildEvent(RecordType record) throws IOException {
+  private Event buildEvent(RecordType record) {
     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
       // create or re-use
       encoder = EncoderFactory.get().binaryEncoder(out, encoder);
-      DatumWriter<RecordType> writer = new SpecificDatumWriter<>(
-          schema);
+      DatumWriter<RecordType> writer = new SpecificDatumWriter<>(schema);
       writer.write(record, encoder);
       encoder.flush();
       out.close();
       return EventBuilder.withBody(out.toByteArray());
+    } catch (IOException ex) {
+      throw new RuntimeException(ex);
     }
   }
 
   @Override
   protected void publish(List<RecordType> records) throws IOException {
+    Preconditions.checkNotNull(client, "Not connected to Flume");
+    Preconditions.checkState(client.isActive(), "Avro client not operational");
     List<Event> events = new ArrayList<>(records.size());
-    for (RecordType record : records) {
-      events.add(buildEvent(record));
-    }
+    records.stream().map(this::buildEvent).forEach(events::add);
     try {
       client.appendBatch(events);
     } catch (EventDeliveryException e) {

@@ -16,16 +16,25 @@
  * limitations under the License.
  */
 
-package org.apache.hadoop.metricate;
+package org.apache.hadoop.metricate.testtools;
 
-public class MetricateConstants {
+import org.apache.flume.conf.FlumeConfiguration;
+import org.apache.flume.node.AbstractConfigurationProvider;
 
-  public static final String METRICATE_LOG_FILENAME = "metricate.log.filename";
-  public static final String METRICATE_FLUME_HOST = "metricate.flume.hostname";
-  public static final String METRICATE_FLUME_PORT = "metricate.flume.port";
-  public static final String METRICATE_FLUME_BATCHSIZE
-      = "metricate.flume.batchsize";
+import java.util.Map;
 
-  public static final String METRICATE_AUDIT_LOGGER
-      = "org.apache.hadoop.metricate.hdfs.MetricateAuditLogger";
+public class ConfigurationProvider extends AbstractConfigurationProvider {
+  private final Map<String, String> properties;
+
+  ConfigurationProvider(String name, Map<String, String> properties) {
+    super(name);
+    this.properties = properties;
+  }
+
+  @Override
+  protected FlumeConfiguration getFlumeConfiguration() {
+    return new FlumeConfiguration(properties);
+  }
+
 }
+

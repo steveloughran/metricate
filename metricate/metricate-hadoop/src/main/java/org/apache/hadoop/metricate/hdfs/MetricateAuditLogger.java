@@ -23,6 +23,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenSecretManager;
 import org.apache.hadoop.hdfs.server.namenode.HdfsAuditLogger;
+import org.apache.hadoop.metricate.MetricateUtils;
 import org.apache.hadoop.metricate.PublishToFlume;
 import org.apache.hadoop.metricate.PublishToLog;
 import org.apache.hadoop.metricate.Publisher;
@@ -35,6 +36,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.hadoop.metricate.avro.NamenodeAuditEventRecord;
+import org.apache.hadoop.service.AbstractService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,19 +54,18 @@ public class MetricateAuditLogger extends HdfsAuditLogger
 
   @Override
   public void initialize(Configuration conf) {
-    publishers.add(new PublishToLog(SCHEMA));
-    publishers.add(new PublishToFlume(SCHEMA));
-    for (Publisher publisher : publishers) {
-      publisher.init(conf);
-      publisher.start();
-    }
+    publishers.add(new PublishToLog<>(SCHEMA));
+    publishers.add(new PublishToFlume<>(SCHEMA));
+    publishers.stream().forEach(p -> {
+      p.init(conf);
+      p.start();
+    });
   }
 
   @Override
   public void close() throws Exception {
-    for (Publisher<NamenodeAuditEventRecord> publisher : publishers) {
-      publisher.stop();
-    }
+    publishers.stream().forEach(AbstractService::stop);
+
   }
 
   @Override
@@ -83,17 +84,9 @@ public class MetricateAuditLogger extends HdfsAuditLogger
     event.setCommand(cmd);
     event.setUsername(userName);
 //    event.setAddress(new StringBuffer(addr.getAddress()));
-    FileStatusRecord fileStatus = new FileStatusRecord();
-    fileStatus.setPath(src);
 
     if (stat != null) {
-      fileStatus.setIsdir(stat.isDirectory());
-      fileStatus.setLength(stat.getLen());
-      fileStatus.setAccessed(stat.getAccessTime());
-      fileStatus.setModified(stat.getModificationTime());
-      fileStatus.setGroup(stat.getGroup());
-      fileStatus.setOwner(stat.getOwner());
-      fileStatus.setPermissions((int) stat.getPermission().toExtendedShort());
+      FileStatusRecord fileStatus = MetricateUtils.createFileStatusRecord(stat);
       event.setSourceFileStatus(fileStatus);
     }
     long now = System.currentTimeMillis();
@@ -101,9 +94,7 @@ public class MetricateAuditLogger extends HdfsAuditLogger
     event.setDate(new Date(now).toString());
     event.setDest(nonNull(dst));
     event.setSucceeded(succeeded);
-    for (Publisher<NamenodeAuditEventRecord> publisher : publishers) {
-      publisher.put(event);
-    }
+    publishers.stream().forEach(p -> p.put(event));
   }
 
   protected String nonNull(String dst) {

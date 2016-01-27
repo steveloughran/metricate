@@ -30,15 +30,19 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Class to asynchronously publish an Avro record type to "something"; subclasses
  * get to choose what
- * @param <RecordType>
+ * @param <RecordType> avro record to publish
  */
-public abstract class Publisher<RecordType extends SpecificRecord> extends AbstractService {
+public abstract class Publisher<RecordType extends SpecificRecord>
+    extends AbstractService {
   private static final Logger LOG = LoggerFactory.getLogger(Publisher.class);
-  Executor publish = Executors.newSingleThreadExecutor();
+  private Executor publish = Executors.newSingleThreadExecutor();
+  private final AtomicLong eventsPublishedCount = new AtomicLong();
+  private final AtomicLong publishFailureCount = new AtomicLong();
 
   private final BlockingDeque<QueuedEvent> queue = new LinkedBlockingDeque<>();
 
@@ -64,27 +68,27 @@ public abstract class Publisher<RecordType extends SpecificRecord> extends Abstr
     super.serviceStop();
   }
 
-  protected void startPublishing() {
-    LOG.info("Starting publisher");
-    publish.execute(new Runnable() {
-      @Override
-      public void run() {
-        while(!isInState(STATE.STOPPED)) {
-          try {
-            QueuedEvent event = queue.take();
-            if (event.isStopEvent()) {
-              LOG.info("stop event received");
-              break;
-            }
-            try {
-              publish(event.records);
-            } catch (IOException e) {
-              handlePublishFailure(event.records, e);
-            }
-          } catch (InterruptedException e) {
-            // interruptions are ignored, but trigger a review of stopped state
-            LOG.info("Interrupted", e);
+  protected void startPublishing() throws IOException {
+    publish.execute(() -> {
+      LOG.info("Started publisher thread");
+      while(!isInState(STATE.STOPPED)) {
+        try {
+          QueuedEvent event = queue.take();
+          if (event.isStopEvent()) {
+            LOG.info("stop event received");
+            break;
           }
+          List<RecordType> records = event.records;
+          try {
+            LOG.debug("Publishing {} records", records.size());
+            publish(records);
+            eventsPublishedCount.addAndGet(records.size());
+          } catch (IOException e) {
+            handlePublishFailure(records, e);
+          }
+        } catch (InterruptedException e) {
+          // interruptions are ignored, but trigger a review of stopped state
+          LOG.info("Interrupted", e);
         }
       }
     });
@@ -109,11 +113,20 @@ public abstract class Publisher<RecordType extends SpecificRecord> extends Abstr
 
   /**
    * Publish failed.
-   * @param records
+   * @param records records that weren't published
    */
   protected void handlePublishFailure(List<RecordType> records, Exception ex) {
     LOG.error("Failed to publish {} records", records.size());
     LOG.warn("{}", ex.toString(), ex);
+    publishFailureCount.addAndGet(records.size());
+  }
+
+  public long getEventsPublishedCount() {
+    return eventsPublishedCount.get();
+  }
+
+  public long getPublishFailureCount() {
+    return publishFailureCount.get();
   }
 
   private class QueuedEvent {
